@@ -6,6 +6,7 @@
 #ifndef		_mach_inject_
 #define		_mach_inject_
 
+#include <unistd.h>
 #include <sys/types.h>
 #include <mach/error.h>
 #include <mach/vm_types.h>

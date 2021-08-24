@@ -14,24 +14,6 @@
 
 Injector::Injector() : module(0), bootstrapfn(0)
 {
-    module = dlopen("bootstrap.dylib",
-        RTLD_NOW | RTLD_LOCAL);
-
-    printf("module: 0x%X\n", module);
-    if (!module)
-    {
-        fprintf(stderr, "dlopen error: %s\n", dlerror());
-        return;
-    }
-
-    bootstrapfn = dlsym(module, "bootstrap");
-    printf("bootstrapfn: 0x%X\n", bootstrapfn);
-
-    if (!bootstrapfn)
-    {
-        fprintf(stderr, "could not locate bootstrap fn\n");
-        return;
-    }
 }
 
 Injector::~Injector()
@@ -43,14 +25,25 @@ Injector::~Injector()
     }
 }
 
-void Injector::inject(pid_t pid, const char* lib)
+void Injector::inject(pid_t pid, const char *bootstrap_lib_path, const char *inject_lib_path)
 {
-    if (!module || !bootstrapfn)
+    module = dlopen(bootstrap_lib_path, RTLD_NOW | RTLD_LOCAL);
+    if (!module)
     {
-        fprintf(stderr, "failed to inject: module:0x%X bootstrapfn:0x%X\n", module, bootstrapfn);
+        fprintf(stderr, "dlopen error: %s\n", dlerror());
         return;
     }
-    mach_error_t err = mach_inject((mach_inject_entry)bootstrapfn, lib, strlen(lib) + 1, pid, 0);
+
+    bootstrapfn = dlsym(module, "bootstrap");
+    if (!bootstrapfn)
+    {
+        fprintf(stderr, "could not locate bootstrap fn\n");
+        return;
+    }
+
+    mach_error_t err = mach_inject((mach_inject_entry)bootstrapfn, 
+        inject_lib_path, strlen(inject_lib_path) + 1,
+        pid, 0);
 }
 
 pid_t Injector::getProcessByName(const char *name)

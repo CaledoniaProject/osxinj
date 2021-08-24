@@ -9,7 +9,7 @@ public:
     Injector();
     ~Injector();
 
-    void inject(pid_t pid, const char* lib);
+    void inject(pid_t pid, const char *, const char *);
     pid_t getProcessByName(const char *name);
 private:
     void *module;
